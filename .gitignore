@@ -1,0 +1,18 @@
+# Executables y compilados de C++
+*.out
+*.exe
+*.o
+*.obj
+a.out
+main
+
+# Archivos comprimidos de entregas finales
+*.zip
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Configuración local de editores
+.vscode/
+.idea/
