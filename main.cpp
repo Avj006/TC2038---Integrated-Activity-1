@@ -186,7 +186,6 @@ int main(){
     string mcode1 = readFile("mcode1.txt");
     string mcode2 = readFile("mcode2.txt");
     string mcode3 = readFile("mcode3.txt");
-
-    cout<<mcode1<<endl;
+    
     return 0;
 };
