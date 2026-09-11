@@ -14,8 +14,6 @@ Date: Friday, September 11th, 2026
 
 using namespace std;
 
-
-
 /*
 Description:
   Reads five text files (transmission1.txt, transmission2.txt, mcode1.txt, 
@@ -162,3 +160,33 @@ Preconditions:
 Postconditions:
   - Outputs results strictly in the required format for Parts 1, 2, and 3.
 */
+
+#include <fstream>
+#include <string>
+
+using namespace std;
+
+string readFile(const string& fileName) {
+    ifstream file(fileName);
+    string content = "", line = "";
+
+    while (getline(file, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back(); // Limpia formato de Windows si existe
+        }
+        content += line;
+    }
+    return content;
+}
+
+int main(){
+    //Reading the txt files: saving it in O(N) in time complexity & O(N) in space complexity 
+    string transmission1 = readFile("transmission1.txt");
+    string transmission12 = readFile("transmission2.txt");
+    string mcode1 = readFile("mcode1.txt");
+    string mcode2 = readFile("mcode2.txt");
+    string mcode3 = readFile("mcode3.txt");
+
+    cout<<mcode1<<endl;
+    return 0;
+};
