@@ -256,12 +256,46 @@ Complexity:
   - Space Complexity: O(M * N) for the 2D Dynamic Programming matrix.
 */
 pair<int, int> findLongestCommonSubstring(const string& trans1, const string& trans2) {
-	pair<int, int> result = {1, 1};
-	// Placeholder to be completed by teammate working on Part 3
-	(void)trans1;
-	(void)trans2;
+	int length1 = static_cast<int>(trans1.length());
+	int length2 = static_cast<int>(trans2.length());
+	pair<int, int> result = {0, 0};
+
+	if (length1 == 0 || length2 == 0) {
+		return result;
+	}
+
+	vector<vector<int>> dp(length1 + 1, vector<int>(length2 + 1, 0));
+	int maxLength = 0;
+	int endIndexTrans1 = 0;
+	int i = 1;
+
+	while (i <= length1) {
+		int j = 1;
+
+		while (j <= length2) {
+			if (trans1[i - 1] == trans2[j - 1]) {
+				dp[i][j] = dp[i - 1][j - 1] + 1;
+
+				if (dp[i][j] > maxLength) {
+					maxLength = dp[i][j];
+					endIndexTrans1 = i;
+				}
+			} else {
+				dp[i][j] = 0;
+			}
+			j = j + 1;
+		}
+		i = i + 1;
+	}
+
+	if (maxLength > 0) {
+		result.first = endIndexTrans1 - maxLength + 1;
+		result.second = endIndexTrans1;
+	}
+
 	return result;
 }
+
 
 /*
 Function: main
