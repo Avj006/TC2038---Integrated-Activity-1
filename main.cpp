@@ -35,8 +35,7 @@ Outputs:
   - Part 2: 2 lines displaying "startPosition endPosition" for each transmission.
   - Part 3: 1 line displaying "startPosition endPosition" relative to transmission1.txt.
 
-
-/*
+*/
 
 /*
 Function: readFile
@@ -62,13 +61,69 @@ Complexity:
   - Time Complexity : O(N), where N is total characters in the file.
   - Space Complexity: O(N), to store file content in memory.
 */
+string readFile(const string& fileName) {
+	ifstream file(fileName);
+	string content = "";
+	string line = "";
+
+	while (getline(file, line)) {
+		if (!line.empty() && line.back() == '\r') {
+			line.pop_back();
+		}
+		content = content + line;
+	}
+
+	return content;
+}
+
+/*
+Function: computeLps
+
+Purpose:
+  Computes the Longest Proper Prefix which is also Suffix (LPS) array for 
+  the malicious code pattern to optimize pattern matching in KMP.
+
+Parameters:
+  - pattern (const string&): Malicious code pattern sequence to preprocess.
+
+Return Value:
+  - vector<int>: Array containing the length of the longest proper prefix 
+    that is also a suffix for each prefix of the pattern.
+
+Complexity:
+  - Time Complexity : O(M), where M is the length of the pattern.
+  - Space Complexity: O(M), to store the LPS array.
+*/
+vector<int> computeLps(const string& pattern) {
+	int patternLength = static_cast<int>(pattern.length());
+	vector<int> lps(patternLength, 0);
+	int length = 0;
+	int index = 1;
+
+	while (index < patternLength) {
+		if (pattern[index] == pattern[length]) {
+			length = length + 1;
+			lps[index] = length;
+			index = index + 1;
+		} else {
+			if (length != 0) {
+				length = lps[length - 1];
+			} else {
+				lps[index] = 0;
+				index = index + 1;
+			}
+		}
+	}
+
+	return lps;
+}
 
 /*
 Function: findMaliciousCodePosition (PART 1)
 
 Purpose:
-  Searches for the occurrence of a malicious code pattern (mcode) inside 
-  a transmission string.
+  Searches for the first occurrence of a malicious code pattern (mcode) inside 
+  a transmission string using the Knuth-Morris-Pratt (KMP) algorithm.
 
 Parameters:
   - text (const string&): Transmission content string.
@@ -84,16 +139,71 @@ Postconditions:
   - Returns positive 1-indexed position if matched, else 0.
 
 Complexity:
-  - Time Complexity : O(N * M), where N = text.length(), M = pattern.length().
-  - Space Complexity: O(1) auxiliary space.
+  - Time Complexity : O(N + M), where N = text.length(), M = pattern.length().
+  - Space Complexity: O(M) auxiliary space for the LPS array.
 */
+int findMaliciousCodePosition(const string& text, const string& pattern) {
+	int textLength = static_cast<int>(text.length());
+	int patternLength = static_cast<int>(pattern.length());
+	int foundPosition = 0;
+
+	if (patternLength == 0 || textLength < patternLength) {
+		return foundPosition;
+	}
+
+	vector<int> lps = computeLps(pattern);
+	int textIndex = 0;
+	int patternIndex = 0;
+	bool patternFound = false;
+
+	while (textIndex < textLength && !patternFound) {
+		if (text[textIndex] == pattern[patternIndex]) {
+			textIndex = textIndex + 1;
+			patternIndex = patternIndex + 1;
+
+			if (patternIndex == patternLength) {
+				foundPosition = textIndex - patternLength + 1;
+				patternFound = true;
+			}
+		} else {
+			if (patternIndex != 0) {
+				patternIndex = lps[patternIndex - 1];
+			} else {
+				textIndex = textIndex + 1;
+			}
+		}
+	}
+
+	return foundPosition;
+}
+
+/*
+Function: displaySearchResult
+
+Purpose:
+  Prints the formatted search result for a malicious code pattern within a transmission.
+  Outputs "true <position>" if found, or "false" if not found.
+
+Parameters:
+  - position (int): 1-indexed start position of the match, or 0 if not present.
+
+Return Value:
+  - void.
+*/
+void displaySearchResult(int position) {
+	if (position > 0) {
+		cout << "true " << position << "\n";
+	} else {
+		cout << "false\n";
+	}
+}
 
 /*
 Function: findLongestPalindrome (PART 2)
 
 Purpose:
   Finds the longest contiguous palindromic substring ("mirrored" code) 
-  within a transmission string using center expansion.
+  within a transmission string using dynamic programming.
 
 Parameters:
   - text (const string&): Transmission string to analyze.
@@ -110,8 +220,14 @@ Postconditions:
 
 Complexity:
   - Time Complexity : O(N^2), where N is the length of the string.
-  - Space Complexity: O(1) auxiliary space.
+  - Space Complexity: O(N^2) for the dynamic programming table.
 */
+pair<int, int> findLongestPalindrome(const string& text) {
+	pair<int, int> result = {1, 1};
+	// Placeholder to be completed by teammate working on Part 2
+	(void)text;
+	return result;
+}
 
 /*
 Function: findLongestCommonSubstring (PART 3)
@@ -139,6 +255,13 @@ Complexity:
   - Time Complexity : O(M * N), where M = trans1.length(), N = trans2.length().
   - Space Complexity: O(M * N) for the 2D Dynamic Programming matrix.
 */
+pair<int, int> findLongestCommonSubstring(const string& trans1, const string& trans2) {
+	pair<int, int> result = {1, 1};
+	// Placeholder to be completed by teammate working on Part 3
+	(void)trans1;
+	(void)trans2;
+	return result;
+}
 
 /*
 Function: main
@@ -160,32 +283,33 @@ Preconditions:
 Postconditions:
   - Outputs results strictly in the required format for Parts 1, 2, and 3.
 */
+int main() {
+	// Reading the 5 text files
+	string transmission1 = readFile("transmission1.txt");
+	string transmission2 = readFile("transmission2.txt");
+	string mcode1 = readFile("mcode1.txt");
+	string mcode2 = readFile("mcode2.txt");
+	string mcode3 = readFile("mcode3.txt");
 
-#include <fstream>
-#include <string>
+	// Part 1: Search mcode1, mcode2, mcode3 in transmission1.txt
+	displaySearchResult(findMaliciousCodePosition(transmission1, mcode1));
+	displaySearchResult(findMaliciousCodePosition(transmission1, mcode2));
+	displaySearchResult(findMaliciousCodePosition(transmission1, mcode3));
 
-using namespace std;
+	// Part 1: Search mcode1, mcode2, mcode3 in transmission2.txt
+	displaySearchResult(findMaliciousCodePosition(transmission2, mcode1));
+	displaySearchResult(findMaliciousCodePosition(transmission2, mcode2));
+	displaySearchResult(findMaliciousCodePosition(transmission2, mcode3));
 
-string readFile(const string& fileName) {
-    ifstream file(fileName);
-    string content = "", line = "";
+	// Part 2: Longest palindrome in transmission1 and transmission2 (placeholder)
+	pair<int, int> palindromeTrans1 = findLongestPalindrome(transmission1);
+	cout << palindromeTrans1.first << " " << palindromeTrans1.second << "\n";
+	pair<int, int> palindromeTrans2 = findLongestPalindrome(transmission2);
+	cout << palindromeTrans2.first << " " << palindromeTrans2.second << "\n";
 
-    while (getline(file, line)) {
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back(); // Limpia formato de Windows si existe
-        }
-        content += line;
-    }
-    return content;
+	// Part 3: Longest Common Substring in transmission1 relative to transmission2 (placeholder)
+	pair<int, int> lcsResult = findLongestCommonSubstring(transmission1, transmission2);
+	cout << lcsResult.first << " " << lcsResult.second << "\n";
+
+	return 0;
 }
-
-int main(){
-    //Reading the txt files: saving it in O(N) in time complexity & O(N) in space complexity 
-    string transmission1 = readFile("transmission1.txt");
-    string transmission12 = readFile("transmission2.txt");
-    string mcode1 = readFile("mcode1.txt");
-    string mcode2 = readFile("mcode2.txt");
-    string mcode3 = readFile("mcode3.txt");
-    
-    return 0;
-};
