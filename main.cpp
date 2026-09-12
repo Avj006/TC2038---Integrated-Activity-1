@@ -36,9 +36,7 @@ Outputs:
   - Part 3: 1 line displaying "startPosition endPosition" relative to transmission1.txt.
 */
 
-/* ============================================================================
-   FILE I/O HELPER FUNCTIONS
-   ============================================================================ */
+*/
 
 /*
 Function: readFile
@@ -79,10 +77,6 @@ string readFile(const string& fileName) {
     return content;
 }
 
-/* ============================================================================
-   STAGE 1 (PART 1): MALICIOUS CODE PATTERN MATCHING (KMP ALGORITHM)
-   ============================================================================ */
-
 /*
 Function: computeLps
 
@@ -96,12 +90,6 @@ Parameters:
 Return Value:
   - vector<int>: Array containing the length of the longest proper prefix 
     that is also a suffix for each prefix of the pattern.
-
-Preconditions:
-  - Pattern string is non-empty.
-
-Postconditions:
-  - Returns integer array representing match shift lengths.
 
 Complexity:
   - Time Complexity : O(M), where M is the length of the pattern.
@@ -132,7 +120,7 @@ vector<int> computeLps(const string& pattern) {
 }
 
 /*
-Function: findMaliciousCodePosition
+Function: computeLps
 
 Purpose:
   Searches for the first occurrence of a malicious code pattern (mcode) inside 
@@ -202,6 +190,27 @@ Parameters:
 
 Return Value:
   - void.
+*/
+void displaySearchResult(int position) {
+    if (position > 0) {
+        cout << "true " << position << "\n";
+    } else {
+        cout << "false\n";
+    }
+}
+
+/*
+Function: displaySearchResult
+
+Purpose:
+  Prints the formatted search result for a malicious code pattern within a transmission.
+  Outputs "true <position>" if found, or "false" if not found.
+
+Parameters:
+  - position (int): 1-indexed start position of the match, or 0 if not present.
+
+Return Value:
+  - void.
 
 Preconditions:
   - Position parameter is non-negative.
@@ -230,7 +239,7 @@ Function: findLongestPalindrome
 
 Purpose:
   Finds the longest contiguous palindromic substring ("mirrored" code) 
-  within a transmission string using Manacher's Algorithm in linear time.
+  within a transmission string using dynamic programming.
 
 Parameters:
   - transmission (const string&): Transmission content string.
@@ -238,79 +247,73 @@ Parameters:
 Return Value:
   - pair<int, int>: 1-indexed (startPosition, endPosition) of the 
     longest palindrome found.
-
-Preconditions:
-  - Input string is initialized.
-
-Postconditions:
-  - Returns 1-indexed boundaries mapping to the longest palindrome.
-
-Complexity:
-  - Time Complexity : O(N), where N is the length of the string.
-  - Space Complexity: O(N) auxiliary space for transformed string and radius array.
 */
 pair<int, int> findLongestPalindrome(const string& transmission) {
-    int stringLength = static_cast<int>(transmission.size());
+    int string_lenght = transmission.size();
     
-    if (stringLength == 0) {
-        return {0, 0};
-    }
+    if (string_lenght == 0) return {0, 0}; 
 
-    string tempString = "#";
-    for (char character : transmission) {
-        tempString += character;
-        tempString += "#";
+    // String preparation with spacer #
+    string temp_string = "#";
+    for (char c : transmission) {
+        temp_string += c;
+        temp_string += "#";
     }
     
-    int tempLength = static_cast<int>(tempString.size());
-    vector<int> pArray(tempLength, 0);
+    // p_array must have the length of the transformed string
+    vector<int> p_array(temp_string.size(), 0);
 
-    int palindromeCenter = 0;
-    int rightLimit = 0;
-    int currentIndex = 0;
-    int currentIndexMirrored = 0;
+    
+    int palindrome_center = 0; // Corresponds to c in the pseudocode presented in class
+    int right_limit = 0;       // Corresponds to r in the pseudocode presented in class
+    int current_index;         // Corresponds to i in the loop; in the pseudocode presented in class
+    int current_index_mirrored;// Corresponds to i' in the pseudocode presented in class
 
-    for (currentIndex = 1; currentIndex < tempLength - 1; currentIndex++) {
-        currentIndexMirrored = 2 * palindromeCenter - currentIndex;
+    // Return variables
+    int startPosition = 0;
+    int endPosition = 0;
+
+    // --- Your for loop starts here using 'current_index' instead of 'i' ---
+    // for(current_index = 1; current_index < temp_string.size() - 1; current_index++) { ... }
+    for(current_index = 1; current_index < temp_string.size() - 1; current_index++){
+        current_index_mirrored = 2 * palindrome_center - current_index;
         
-        if (rightLimit > currentIndex) {
-            pArray[currentIndex] = min(rightLimit - currentIndex, pArray[currentIndexMirrored]);
+        if(right_limit > current_index){
+            // Corrección: r - i
+            p_array[current_index] = min(right_limit - current_index, p_array[current_index_mirrored]);
         } else {
-            pArray[currentIndex] = 0;
+            p_array[current_index] = 0;
         }
         
-        while (currentIndex - 1 - pArray[currentIndex] >= 0 && 
-               currentIndex + 1 + pArray[currentIndex] < tempLength &&
-               tempString[currentIndex + 1 + pArray[currentIndex]] == tempString[currentIndex - 1 - pArray[currentIndex]]) {
-            pArray[currentIndex] = pArray[currentIndex] + 1;
+        // Corrección: Usar temp_string, arreglar corchetes, nombrar bien p_array y proteger límites
+        while (current_index - 1 - p_array[current_index] >= 0 && 
+               current_index + 1 + p_array[current_index] < temp_string.size() &&
+               temp_string[current_index + 1 + p_array[current_index]] == temp_string[current_index - 1 - p_array[current_index]]) {
+            
+            p_array[current_index] += 1;
         }
         
-        if (currentIndex + pArray[currentIndex] > rightLimit) {
-            palindromeCenter = currentIndex;
-            rightLimit = currentIndex + pArray[currentIndex];
+        if(current_index + p_array[current_index] > right_limit){
+            palindrome_center = current_index;
+            right_limit = current_index + p_array[current_index]; // Corrección: faltaba ';'
         }
     }
 
-    int maxLengthPalindrome = 0;
-    int centerIndex = 0;
-    int i = 0;
+    //extra logic to return first position and last (start and end)
+    int max_lenght_palindome = 0;
+    int center_index = 0;
 
-    for (i = 0; i < tempLength; i++) {
-        if (pArray[i] > maxLengthPalindrome) {
-            maxLengthPalindrome = pArray[i];
-            centerIndex = i;
+    for (int i = 0; i < p_array.size(); i++) {
+        if (p_array[i] > max_lenght_palindome) {
+            max_lenght_palindome = p_array[i];
+            center_index = i;
         }
     }
+    startPosition = (center_index - max_lenght_palindome) / 2; //due to the # characters
+    endPosition = startPosition + max_lenght_palindome - 1;
 
-    int startPosition = (centerIndex - maxLengthPalindrome) / 2;
-    int endPosition = startPosition + maxLengthPalindrome - 1;
-
-    return {startPosition + 1, endPosition + 1};
+    return {startPosition, endPosition};
 }
-
-/* ============================================================================
-   STAGE 3 (PART 3): LONGEST COMMON SUBSTRING (DYNAMIC PROGRAMMING)
-   ============================================================================ */
 
 /*
 Function: findLongestCommonSubstring
@@ -379,9 +382,6 @@ pair<int, int> findLongestCommonSubstring(const string& trans1, const string& tr
     return result;
 }
 
-/* ============================================================================
-   MAIN EXECUTION DRIVER
-   ============================================================================ */
 
 /*
 Function: main
@@ -404,47 +404,34 @@ Postconditions:
   - Outputs analysis results strictly in the required format.
 */
 int main() {
-    // File I/O: Reading input text files into memory
+    // Reading the 5 text files
     string transmission1 = readFile("transmission1.txt");
     string transmission2 = readFile("transmission2.txt");
     string mcode1 = readFile("mcode1.txt");
     string mcode2 = readFile("mcode2.txt");
     string mcode3 = readFile("mcode3.txt");
 
-    // --- STAGE 1 (PART 1): Substring search in transmission1.txt ---
+    
+    // Part 1: Search mcode1, mcode2, mcode3 in transmission1.txt
     displaySearchResult(findMaliciousCodePosition(transmission1, mcode1));
     displaySearchResult(findMaliciousCodePosition(transmission1, mcode2));
     displaySearchResult(findMaliciousCodePosition(transmission1, mcode3));
 
-    // --- STAGE 1 (PART 1): Substring search in transmission2.txt ---
+    // Part 1: Search mcode1, mcode2, mcode3 in transmission2.txt
     displaySearchResult(findMaliciousCodePosition(transmission2, mcode1));
     displaySearchResult(findMaliciousCodePosition(transmission2, mcode2));
     displaySearchResult(findMaliciousCodePosition(transmission2, mcode3));
+    
 
-    // --- STAGE 2 (PART 2): Longest Palindrome Search (Manacher) ---
+    // Part 2: Longest palindrome in transmission1 and transmission2 (placeholder)
     pair<int, int> palindromeTrans1 = findLongestPalindrome(transmission1);
-    cout << palindromeTrans1.first << " " << palindromeTrans1.second << "\n";
-
+    cout << palindromeTrans1.first + 1 << " " << palindromeTrans1.second + 1 << "\n";
     pair<int, int> palindromeTrans2 = findLongestPalindrome(transmission2);
-    cout << palindromeTrans2.first << " " << palindromeTrans2.second << "\n";
+    cout << palindromeTrans2.first + 1 << " " << palindromeTrans2.second + 1 << "\n";
 
-    // --- STAGE 3 (PART 3): Longest Common Substring (LCS) ---
+    // Part 3: Longest Common Substring in transmission1 relative to transmission2 (placeholder)
     pair<int, int> lcsResult = findLongestCommonSubstring(transmission1, transmission2);
     cout << lcsResult.first << " " << lcsResult.second << "\n";
 
     return 0;
 }
-
-/*
-Refrencias y fuentes consultadas
-- Sánchez Ante, G. (2026). Longest palindromic string: Manacher algorithm [Diapositivas de presentación]. 
-Canvas, Tecnológico de Monterrey. https://drive.google.com/drive/folders/1R2KmKQVfey1r_dhSl3aKA8jAy8J0UJ78
-- Gemini AI was used to assist checking the coding standard (pdf) and for team.txt
-
-NOTE:
-- "For the development of Stage #2 (longest palindromic substring search using Manacher's algorithm), the 
-logic and pseudocode proposed by Sánchez Ante (2026) served as the foundation. Building upon this structure, 
-specific C++ adaptations were implemented, such as inserting '#' separator characters to unify even and odd 
-length cases, and applying the mathematical adjustment (centerIndex - maxLengthPalindrome) / 2 to translate 
-transformed indices back to the 1-based original positions required by the specification.
-*/
