@@ -36,8 +36,6 @@ Outputs:
   - Part 3: 1 line displaying "startPosition endPosition" relative to transmission1.txt.
 */
 
-*/
-
 /*
 Function: readFile
 
@@ -120,7 +118,7 @@ vector<int> computeLps(const string& pattern) {
 }
 
 /*
-Function: computeLps
+Function: findMaliciousCodePosition
 
 Purpose:
   Searches for the first occurrence of a malicious code pattern (mcode) inside 
@@ -190,27 +188,6 @@ Parameters:
 
 Return Value:
   - void.
-*/
-void displaySearchResult(int position) {
-    if (position > 0) {
-        cout << "true " << position << "\n";
-    } else {
-        cout << "false\n";
-    }
-}
-
-/*
-Function: displaySearchResult
-
-Purpose:
-  Prints the formatted search result for a malicious code pattern within a transmission.
-  Outputs "true <position>" if found, or "false" if not found.
-
-Parameters:
-  - position (int): 1-indexed start position of the match, or 0 if not present.
-
-Return Value:
-  - void.
 
 Preconditions:
   - Position parameter is non-negative.
@@ -239,7 +216,7 @@ Function: findLongestPalindrome
 
 Purpose:
   Finds the longest contiguous palindromic substring ("mirrored" code) 
-  within a transmission string using dynamic programming.
+  within a transmission string using Manacher's Algorithm in linear time.
 
 Parameters:
   - transmission (const string&): Transmission content string.
@@ -249,7 +226,7 @@ Return Value:
     longest palindrome found.
 */
 pair<int, int> findLongestPalindrome(const string& transmission) {
-    int string_lenght = transmission.size();
+    int string_lenght = static_cast<int>(transmission.size());
     
     if (string_lenght == 0) return {0, 0}; 
 
@@ -260,59 +237,52 @@ pair<int, int> findLongestPalindrome(const string& transmission) {
         temp_string += "#";
     }
     
-    // p_array must have the length of the transformed string
     vector<int> p_array(temp_string.size(), 0);
 
-    
-    int palindrome_center = 0; // Corresponds to c in the pseudocode presented in class
-    int right_limit = 0;       // Corresponds to r in the pseudocode presented in class
-    int current_index;         // Corresponds to i in the loop; in the pseudocode presented in class
-    int current_index_mirrored;// Corresponds to i' in the pseudocode presented in class
+    int palindrome_center = 0; // Corresponds to C in pseudocode
+    int right_limit = 0;       // Corresponds to R in pseudocode
+    int current_index;         // Corresponds to i in pseudocode
+    int current_index_mirrored;// Corresponds to i' in pseudocode
 
-    // Return variables
     int startPosition = 0;
     int endPosition = 0;
 
-    // --- Your for loop starts here using 'current_index' instead of 'i' ---
-    // for(current_index = 1; current_index < temp_string.size() - 1; current_index++) { ... }
-    for(current_index = 1; current_index < temp_string.size() - 1; current_index++){
+    for (current_index = 1; current_index < static_cast<int>(temp_string.size()) - 1; current_index++) {
         current_index_mirrored = 2 * palindrome_center - current_index;
         
-        if(right_limit > current_index){
-            // Corrección: r - i
+        if (right_limit > current_index) {
             p_array[current_index] = min(right_limit - current_index, p_array[current_index_mirrored]);
         } else {
             p_array[current_index] = 0;
         }
         
-        // Corrección: Usar temp_string, arreglar corchetes, nombrar bien p_array y proteger límites
         while (current_index - 1 - p_array[current_index] >= 0 && 
-               current_index + 1 + p_array[current_index] < temp_string.size() &&
+               current_index + 1 + p_array[current_index] < static_cast<int>(temp_string.size()) &&
                temp_string[current_index + 1 + p_array[current_index]] == temp_string[current_index - 1 - p_array[current_index]]) {
             
             p_array[current_index] += 1;
         }
         
-        if(current_index + p_array[current_index] > right_limit){
+        if (current_index + p_array[current_index] > right_limit) {
             palindrome_center = current_index;
-            right_limit = current_index + p_array[current_index]; // Corrección: faltaba ';'
+            right_limit = current_index + p_array[current_index];
         }
     }
 
-    //extra logic to return first position and last (start and end)
     int max_lenght_palindome = 0;
     int center_index = 0;
 
-    for (int i = 0; i < p_array.size(); i++) {
+    for (size_t i = 0; i < p_array.size(); i++) {
         if (p_array[i] > max_lenght_palindome) {
             max_lenght_palindome = p_array[i];
             center_index = i;
         }
     }
-    startPosition = (center_index - max_lenght_palindome) / 2; //due to the # characters
+    startPosition = (center_index - max_lenght_palindome) / 2;
     endPosition = startPosition + max_lenght_palindome - 1;
 
-    return {startPosition, endPosition};
+    // Convert 0-indexed coordinates to 1-indexed coordinates for return
+    return {startPosition + 1, endPosition + 1};
 }
 
 /*
@@ -382,7 +352,6 @@ pair<int, int> findLongestCommonSubstring(const string& trans1, const string& tr
     return result;
 }
 
-
 /*
 Function: main
 
@@ -411,7 +380,6 @@ int main() {
     string mcode2 = readFile("mcode2.txt");
     string mcode3 = readFile("mcode3.txt");
 
-    
     // Part 1: Search mcode1, mcode2, mcode3 in transmission1.txt
     displaySearchResult(findMaliciousCodePosition(transmission1, mcode1));
     displaySearchResult(findMaliciousCodePosition(transmission1, mcode2));
@@ -421,15 +389,14 @@ int main() {
     displaySearchResult(findMaliciousCodePosition(transmission2, mcode1));
     displaySearchResult(findMaliciousCodePosition(transmission2, mcode2));
     displaySearchResult(findMaliciousCodePosition(transmission2, mcode3));
-    
 
-    // Part 2: Longest palindrome in transmission1 and transmission2 (placeholder)
+    // Part 2: Longest palindrome in transmission1 and transmission2
     pair<int, int> palindromeTrans1 = findLongestPalindrome(transmission1);
-    cout << palindromeTrans1.first + 1 << " " << palindromeTrans1.second + 1 << "\n";
+    cout << palindromeTrans1.first << " " << palindromeTrans1.second << "\n";
     pair<int, int> palindromeTrans2 = findLongestPalindrome(transmission2);
-    cout << palindromeTrans2.first + 1 << " " << palindromeTrans2.second + 1 << "\n";
+    cout << palindromeTrans2.first << " " << palindromeTrans2.second << "\n";
 
-    // Part 3: Longest Common Substring in transmission1 relative to transmission2 (placeholder)
+    // Part 3: Longest Common Substring in transmission1 relative to transmission2
     pair<int, int> lcsResult = findLongestCommonSubstring(transmission1, transmission2);
     cout << lcsResult.first << " " << lcsResult.second << "\n";
 
