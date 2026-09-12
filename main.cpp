@@ -19,9 +19,9 @@ Description:
   Reads five text files (transmission1.txt, transmission2.txt, mcode1.txt, 
   mcode2.txt, mcode3.txt) containing hexadecimal characters (0-9, A-F) 
   and line breaks. Performs three distinct non-sequential analysis tasks:
-    - Part 1: Substring search to locate malicious code patterns in transmissions.
-    - Part 2: Longest palindromic substring search ("mirrored" code).
-    - Part 3: Longest Common Substring (LCS) to measure similarity between files.
+    - Part 1 (Stage 1): Substring search using KMP algorithm.
+    - Part 2 (Stage 2): Longest palindromic substring search using Manacher's algorithm.
+    - Part 3 (Stage 3): Longest Common Substring (LCS) search using Dynamic Programming.
 
 Preconditions:
   - The 5 text files exist in the same execution root directory.
@@ -34,8 +34,11 @@ Outputs:
   - Part 1: 6 lines formatted as "(true position | false)".
   - Part 2: 2 lines displaying "startPosition endPosition" for each transmission.
   - Part 3: 1 line displaying "startPosition endPosition" relative to transmission1.txt.
-
 */
+
+/* ============================================================================
+   FILE I/O HELPER FUNCTIONS
+   ============================================================================ */
 
 /*
 Function: readFile
@@ -62,19 +65,23 @@ Complexity:
   - Space Complexity: O(N), to store file content in memory.
 */
 string readFile(const string& fileName) {
-	ifstream file(fileName);
-	string content = "";
-	string line = "";
+    ifstream file(fileName);
+    string content = "";
+    string line = "";
 
-	while (getline(file, line)) {
-		if (!line.empty() && line.back() == '\r') {
-			line.pop_back();
-		}
-		content = content + line;
-	}
+    while (getline(file, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        content = content + line;
+    }
 
-	return content;
+    return content;
 }
+
+/* ============================================================================
+   STAGE 1 (PART 1): MALICIOUS CODE PATTERN MATCHING (KMP ALGORITHM)
+   ============================================================================ */
 
 /*
 Function: computeLps
@@ -90,36 +97,42 @@ Return Value:
   - vector<int>: Array containing the length of the longest proper prefix 
     that is also a suffix for each prefix of the pattern.
 
+Preconditions:
+  - Pattern string is non-empty.
+
+Postconditions:
+  - Returns integer array representing match shift lengths.
+
 Complexity:
   - Time Complexity : O(M), where M is the length of the pattern.
   - Space Complexity: O(M), to store the LPS array.
 */
 vector<int> computeLps(const string& pattern) {
-	int patternLength = static_cast<int>(pattern.length());
-	vector<int> lps(patternLength, 0);
-	int length = 0;
-	int index = 1;
+    int patternLength = static_cast<int>(pattern.length());
+    vector<int> lps(patternLength, 0);
+    int length = 0;
+    int index = 1;
 
-	while (index < patternLength) {
-		if (pattern[index] == pattern[length]) {
-			length = length + 1;
-			lps[index] = length;
-			index = index + 1;
-		} else {
-			if (length != 0) {
-				length = lps[length - 1];
-			} else {
-				lps[index] = 0;
-				index = index + 1;
-			}
-		}
-	}
+    while (index < patternLength) {
+        if (pattern[index] == pattern[length]) {
+            length = length + 1;
+            lps[index] = length;
+            index = index + 1;
+        } else {
+            if (length != 0) {
+                length = lps[length - 1];
+            } else {
+                lps[index] = 0;
+                index = index + 1;
+            }
+        }
+    }
 
-	return lps;
+    return lps;
 }
 
 /*
-Function: findMaliciousCodePosition (PART 1)
+Function: findMaliciousCodePosition
 
 Purpose:
   Searches for the first occurrence of a malicious code pattern (mcode) inside 
@@ -143,38 +156,38 @@ Complexity:
   - Space Complexity: O(M) auxiliary space for the LPS array.
 */
 int findMaliciousCodePosition(const string& text, const string& pattern) {
-	int textLength = static_cast<int>(text.length());
-	int patternLength = static_cast<int>(pattern.length());
-	int foundPosition = 0;
+    int textLength = static_cast<int>(text.length());
+    int patternLength = static_cast<int>(pattern.length());
+    int foundPosition = 0;
 
-	if (patternLength == 0 || textLength < patternLength) {
-		return foundPosition;
-	}
+    if (patternLength == 0 || textLength < patternLength) {
+        return foundPosition;
+    }
 
-	vector<int> lps = computeLps(pattern);
-	int textIndex = 0;
-	int patternIndex = 0;
-	bool patternFound = false;
+    vector<int> lps = computeLps(pattern);
+    int textIndex = 0;
+    int patternIndex = 0;
+    bool patternFound = false;
 
-	while (textIndex < textLength && !patternFound) {
-		if (text[textIndex] == pattern[patternIndex]) {
-			textIndex = textIndex + 1;
-			patternIndex = patternIndex + 1;
+    while (textIndex < textLength && !patternFound) {
+        if (text[textIndex] == pattern[patternIndex]) {
+            textIndex = textIndex + 1;
+            patternIndex = patternIndex + 1;
 
-			if (patternIndex == patternLength) {
-				foundPosition = textIndex - patternLength + 1;
-				patternFound = true;
-			}
-		} else {
-			if (patternIndex != 0) {
-				patternIndex = lps[patternIndex - 1];
-			} else {
-				textIndex = textIndex + 1;
-			}
-		}
-	}
+            if (patternIndex == patternLength) {
+                foundPosition = textIndex - patternLength + 1;
+                patternFound = true;
+            }
+        } else {
+            if (patternIndex != 0) {
+                patternIndex = lps[patternIndex - 1];
+            } else {
+                textIndex = textIndex + 1;
+            }
+        }
+    }
 
-	return foundPosition;
+    return foundPosition;
 }
 
 /*
@@ -189,48 +202,118 @@ Parameters:
 
 Return Value:
   - void.
+
+Preconditions:
+  - Position parameter is non-negative.
+
+Postconditions:
+  - Prints result to standard output stream.
+
+Complexity:
+  - Time Complexity : O(1).
+  - Space Complexity: O(1).
 */
 void displaySearchResult(int position) {
-	if (position > 0) {
-		cout << "true " << position << "\n";
-	} else {
-		cout << "false\n";
-	}
+    if (position > 0) {
+        cout << "true " << position << "\n";
+    } else {
+        cout << "false\n";
+    }
 }
 
+/* ============================================================================
+   STAGE 2 (PART 2): LONGEST PALINDROMIC SUBSTRING (MANACHER'S ALGORITHM)
+   ============================================================================ */
+
 /*
-Function: findLongestPalindrome (PART 2)
+Function: findLongestPalindrome
 
 Purpose:
   Finds the longest contiguous palindromic substring ("mirrored" code) 
-  within a transmission string using dynamic programming.
+  within a transmission string using Manacher's Algorithm in linear time.
 
 Parameters:
-  - text (const string&): Transmission string to analyze.
+  - transmission (const string&): Transmission content string.
 
 Return Value:
   - pair<int, int>: 1-indexed (startPosition, endPosition) of the 
     longest palindrome found.
 
 Preconditions:
-  - Transmission string contains at least one character.
+  - Input string is initialized.
 
 Postconditions:
-  - Returns valid start and end indices bounding the longest palindrome.
+  - Returns 1-indexed boundaries mapping to the longest palindrome.
 
 Complexity:
-  - Time Complexity : O(N^2), where N is the length of the string.
-  - Space Complexity: O(N^2) for the dynamic programming table.
+  - Time Complexity : O(N), where N is the length of the string.
+  - Space Complexity: O(N) auxiliary space for transformed string and radius array.
 */
-pair<int, int> findLongestPalindrome(const string& text) {
-	pair<int, int> result = {1, 1};
-	// Placeholder to be completed by teammate working on Part 2
-	(void)text;
-	return result;
+pair<int, int> findLongestPalindrome(const string& transmission) {
+    int stringLength = static_cast<int>(transmission.size());
+    
+    if (stringLength == 0) {
+        return {0, 0};
+    }
+
+    string tempString = "#";
+    for (char character : transmission) {
+        tempString += character;
+        tempString += "#";
+    }
+    
+    int tempLength = static_cast<int>(tempString.size());
+    vector<int> pArray(tempLength, 0);
+
+    int palindromeCenter = 0;
+    int rightLimit = 0;
+    int currentIndex = 0;
+    int currentIndexMirrored = 0;
+
+    for (currentIndex = 1; currentIndex < tempLength - 1; currentIndex++) {
+        currentIndexMirrored = 2 * palindromeCenter - currentIndex;
+        
+        if (rightLimit > currentIndex) {
+            pArray[currentIndex] = min(rightLimit - currentIndex, pArray[currentIndexMirrored]);
+        } else {
+            pArray[currentIndex] = 0;
+        }
+        
+        while (currentIndex - 1 - pArray[currentIndex] >= 0 && 
+               currentIndex + 1 + pArray[currentIndex] < tempLength &&
+               tempString[currentIndex + 1 + pArray[currentIndex]] == tempString[currentIndex - 1 - pArray[currentIndex]]) {
+            pArray[currentIndex] = pArray[currentIndex] + 1;
+        }
+        
+        if (currentIndex + pArray[currentIndex] > rightLimit) {
+            palindromeCenter = currentIndex;
+            rightLimit = currentIndex + pArray[currentIndex];
+        }
+    }
+
+    int maxLengthPalindrome = 0;
+    int centerIndex = 0;
+    int i = 0;
+
+    for (i = 0; i < tempLength; i++) {
+        if (pArray[i] > maxLengthPalindrome) {
+            maxLengthPalindrome = pArray[i];
+            centerIndex = i;
+        }
+    }
+
+    int startPosition = (centerIndex - maxLengthPalindrome) / 2;
+    int endPosition = startPosition + maxLengthPalindrome - 1;
+
+    return {startPosition + 1, endPosition + 1};
 }
 
+/* ============================================================================
+   STAGE 3 (PART 3): LONGEST COMMON SUBSTRING (DYNAMIC PROGRAMMING)
+   ============================================================================ */
+
 /*
-Function: findLongestCommonSubstring (PART 3)
+Function: findLongestCommonSubstring
 
 Purpose:
   Calculates the Longest Common Substring (LCS) between two transmission 
@@ -256,54 +339,57 @@ Complexity:
   - Space Complexity: O(M * N) for the 2D Dynamic Programming matrix.
 */
 pair<int, int> findLongestCommonSubstring(const string& trans1, const string& trans2) {
-	int length1 = static_cast<int>(trans1.length());
-	int length2 = static_cast<int>(trans2.length());
-	pair<int, int> result = {0, 0};
+    int length1 = static_cast<int>(trans1.length());
+    int length2 = static_cast<int>(trans2.length());
+    pair<int, int> result = {0, 0};
 
-	if (length1 == 0 || length2 == 0) {
-		return result;
-	}
+    if (length1 == 0 || length2 == 0) {
+        return result;
+    }
 
-	vector<vector<int>> dp(length1 + 1, vector<int>(length2 + 1, 0));
-	int maxLength = 0;
-	int endIndexTrans1 = 0;
-	int i = 1;
+    vector<vector<int>> dp(length1 + 1, vector<int>(length2 + 1, 0));
+    int maxLength = 0;
+    int endIndexTrans1 = 0;
+    int i = 1;
 
-	while (i <= length1) {
-		int j = 1;
+    while (i <= length1) {
+        int j = 1;
 
-		while (j <= length2) {
-			if (trans1[i - 1] == trans2[j - 1]) {
-				dp[i][j] = dp[i - 1][j - 1] + 1;
+        while (j <= length2) {
+            if (trans1[i - 1] == trans2[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
 
-				if (dp[i][j] > maxLength) {
-					maxLength = dp[i][j];
-					endIndexTrans1 = i;
-				}
-			} else {
-				dp[i][j] = 0;
-			}
-			j = j + 1;
-		}
-		i = i + 1;
-	}
+                if (dp[i][j] > maxLength) {
+                    maxLength = dp[i][j];
+                    endIndexTrans1 = i;
+                }
+            } else {
+                dp[i][j] = 0;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
 
-	if (maxLength > 0) {
-		result.first = endIndexTrans1 - maxLength + 1;
-		result.second = endIndexTrans1;
-	}
+    if (maxLength > 0) {
+        result.first = endIndexTrans1 - maxLength + 1;
+        result.second = endIndexTrans1;
+    }
 
-	return result;
+    return result;
 }
 
+/* ============================================================================
+   MAIN EXECUTION DRIVER
+   ============================================================================ */
 
 /*
 Function: main
 
 Purpose:
   Program entry point. Coordinates reading all 5 text files, triggers 
-  execution of analysis modules for Parts 1, 2, and 3, and formats 
-  standard output according to specifications.
+  execution of analysis modules for Stage 1 (Part 1), Stage 2 (Part 2), 
+  and Stage 3 (Part 3), formatting output according to specifications.
 
 Parameters:
   - None.
@@ -312,38 +398,53 @@ Return Value:
   - int: 0 upon successful execution.
 
 Preconditions:
-  - The 5 required files exist in the execution path.
+  - The 5 required text files exist in the execution path.
 
 Postconditions:
-  - Outputs results strictly in the required format for Parts 1, 2, and 3.
+  - Outputs analysis results strictly in the required format.
 */
 int main() {
-	// Reading the 5 text files
-	string transmission1 = readFile("transmission1.txt");
-	string transmission2 = readFile("transmission2.txt");
-	string mcode1 = readFile("mcode1.txt");
-	string mcode2 = readFile("mcode2.txt");
-	string mcode3 = readFile("mcode3.txt");
+    // File I/O: Reading input text files into memory
+    string transmission1 = readFile("transmission1.txt");
+    string transmission2 = readFile("transmission2.txt");
+    string mcode1 = readFile("mcode1.txt");
+    string mcode2 = readFile("mcode2.txt");
+    string mcode3 = readFile("mcode3.txt");
 
-	// Part 1: Search mcode1, mcode2, mcode3 in transmission1.txt
-	displaySearchResult(findMaliciousCodePosition(transmission1, mcode1));
-	displaySearchResult(findMaliciousCodePosition(transmission1, mcode2));
-	displaySearchResult(findMaliciousCodePosition(transmission1, mcode3));
+    // --- STAGE 1 (PART 1): Substring search in transmission1.txt ---
+    displaySearchResult(findMaliciousCodePosition(transmission1, mcode1));
+    displaySearchResult(findMaliciousCodePosition(transmission1, mcode2));
+    displaySearchResult(findMaliciousCodePosition(transmission1, mcode3));
 
-	// Part 1: Search mcode1, mcode2, mcode3 in transmission2.txt
-	displaySearchResult(findMaliciousCodePosition(transmission2, mcode1));
-	displaySearchResult(findMaliciousCodePosition(transmission2, mcode2));
-	displaySearchResult(findMaliciousCodePosition(transmission2, mcode3));
+    // --- STAGE 1 (PART 1): Substring search in transmission2.txt ---
+    displaySearchResult(findMaliciousCodePosition(transmission2, mcode1));
+    displaySearchResult(findMaliciousCodePosition(transmission2, mcode2));
+    displaySearchResult(findMaliciousCodePosition(transmission2, mcode3));
 
-	// Part 2: Longest palindrome in transmission1 and transmission2 (placeholder)
-	pair<int, int> palindromeTrans1 = findLongestPalindrome(transmission1);
-	cout << palindromeTrans1.first << " " << palindromeTrans1.second << "\n";
-	pair<int, int> palindromeTrans2 = findLongestPalindrome(transmission2);
-	cout << palindromeTrans2.first << " " << palindromeTrans2.second << "\n";
+    // --- STAGE 2 (PART 2): Longest Palindrome Search (Manacher) ---
+    pair<int, int> palindromeTrans1 = findLongestPalindrome(transmission1);
+    cout << palindromeTrans1.first << " " << palindromeTrans1.second << "\n";
 
-	// Part 3: Longest Common Substring in transmission1 relative to transmission2 (placeholder)
-	pair<int, int> lcsResult = findLongestCommonSubstring(transmission1, transmission2);
-	cout << lcsResult.first << " " << lcsResult.second << "\n";
+    pair<int, int> palindromeTrans2 = findLongestPalindrome(transmission2);
+    cout << palindromeTrans2.first << " " << palindromeTrans2.second << "\n";
 
-	return 0;
+    // --- STAGE 3 (PART 3): Longest Common Substring (LCS) ---
+    pair<int, int> lcsResult = findLongestCommonSubstring(transmission1, transmission2);
+    cout << lcsResult.first << " " << lcsResult.second << "\n";
+
+    return 0;
 }
+
+/*
+Refrencias y fuentes consultadas
+- Sánchez Ante, G. (2026). Longest palindromic string: Manacher algorithm [Diapositivas de presentación]. 
+Canvas, Tecnológico de Monterrey. https://drive.google.com/drive/folders/1R2KmKQVfey1r_dhSl3aKA8jAy8J0UJ78
+- Gemini AI was used to assist checking the coding standard (pdf) and for team.txt
+
+NOTE:
+- "For the development of Stage #2 (longest palindromic substring search using Manacher's algorithm), the 
+logic and pseudocode proposed by Sánchez Ante (2026) served as the foundation. Building upon this structure, 
+specific C++ adaptations were implemented, such as inserting '#' separator characters to unify even and odd 
+length cases, and applying the mathematical adjustment (centerIndex - maxLengthPalindrome) / 2 to translate 
+transformed indices back to the 1-based original positions required by the specification.
+*/
