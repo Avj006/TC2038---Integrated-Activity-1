@@ -1,6 +1,7 @@
 ====================================================================
 TC2038 - Integrated Activity 1.2: Transmission Analysis Tool
 Team Members & Task Distribution
+Date: September 11, 2026
 ====================================================================
 
 Joint Collaboration (All Stages):
@@ -26,11 +27,11 @@ Joint Collaboration (All Stages):
 2. Andrea Villaseñor Jiménez (A01642088)
    - Responsibilities:
      * Stage #2 (Part 2 - Longest Palindromic Substring):
-       - Implemented Manacher's Algorithm in `longestPalindrome` to achieve O(N) 
+       - Implemented Manacher's Algorithm in `findLongestPalindrome` to achieve O(N) 
          linear time complexity for searching mirrored hex patterns.
-       - Built string transformation logic using '#' spacers (`temp_string`) to 
+       - Built string transformation logic using '#' spacers (`tempString`) to 
          unify odd and even length palindrome evaluations.
-       - Developed coordinate translation math `(center_index - max_length) / 2` 
+       - Developed coordinate translation math `(centerIndex - maxLengthPalindrome) / 2` 
          and adjusted outputs to meet 1-based indexing specifications (+1).
      * Data Ingestion & File I/O Setup:
        - Designed and integrated `readFile` stream logic in `main.cpp` using `ifstream` 
@@ -41,9 +42,5 @@ Joint Collaboration (All Stages):
        - Created, initialized, and structured the GitHub repository architecture.
        - Managed branch flow (stage branches), Pull Requests (PRs), code reviews, 
          merge conflicts, and overall repository maintenance.
-
-====================================================================
-Date: September 11, 2026
-====================================================================
 
 NOTE: team.txt was assited with Gemini AI (for a better format and readability)
