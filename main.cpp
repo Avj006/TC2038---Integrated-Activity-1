@@ -19,9 +19,9 @@ Description:
   Reads five text files (transmission1.txt, transmission2.txt, mcode1.txt, 
   mcode2.txt, mcode3.txt) containing hexadecimal characters (0-9, A-F) 
   and line breaks. Performs three distinct non-sequential analysis tasks:
-    - Part 1: Substring search to locate malicious code patterns in transmissions.
-    - Part 2: Longest palindromic substring search ("mirrored" code).
-    - Part 3: Longest Common Substring (LCS) to measure similarity between files.
+    - Part 1 (Stage 1): Substring search using KMP algorithm.
+    - Part 2 (Stage 2): Longest palindromic substring search using Manacher's algorithm.
+    - Part 3 (Stage 3): Longest Common Substring (LCS) search using Dynamic Programming.
 
 Preconditions:
   - The 5 text files exist in the same execution root directory.
@@ -34,6 +34,7 @@ Outputs:
   - Part 1: 6 lines formatted as "(true position | false)".
   - Part 2: 2 lines displaying "startPosition endPosition" for each transmission.
   - Part 3: 1 line displaying "startPosition endPosition" relative to transmission1.txt.
+*/
 
 */
 
@@ -119,7 +120,7 @@ vector<int> computeLps(const string& pattern) {
 }
 
 /*
-Function: findMaliciousCodePosition (PART 1)
+Function: computeLps
 
 Purpose:
   Searches for the first occurrence of a malicious code pattern (mcode) inside 
@@ -199,14 +200,49 @@ void displaySearchResult(int position) {
 }
 
 /*
-Function: findLongestPalindrome (PART 2)
+Function: displaySearchResult
+
+Purpose:
+  Prints the formatted search result for a malicious code pattern within a transmission.
+  Outputs "true <position>" if found, or "false" if not found.
+
+Parameters:
+  - position (int): 1-indexed start position of the match, or 0 if not present.
+
+Return Value:
+  - void.
+
+Preconditions:
+  - Position parameter is non-negative.
+
+Postconditions:
+  - Prints result to standard output stream.
+
+Complexity:
+  - Time Complexity : O(1).
+  - Space Complexity: O(1).
+*/
+void displaySearchResult(int position) {
+    if (position > 0) {
+        cout << "true " << position << "\n";
+    } else {
+        cout << "false\n";
+    }
+}
+
+/* ============================================================================
+   STAGE 2 (PART 2): LONGEST PALINDROMIC SUBSTRING (MANACHER'S ALGORITHM)
+   ============================================================================ */
+
+/*
+Function: findLongestPalindrome
 
 Purpose:
   Finds the longest contiguous palindromic substring ("mirrored" code) 
   within a transmission string using dynamic programming.
 
 Parameters:
-  - text (const string&): Transmission string to analyze.
+  - transmission (const string&): Transmission content string.
 
 Return Value:
   - pair<int, int>: 1-indexed (startPosition, endPosition) of the 
@@ -280,7 +316,7 @@ pair<int, int> findLongestPalindrome(const string& transmission) {
 }
 
 /*
-Function: findLongestCommonSubstring (PART 3)
+Function: findLongestCommonSubstring
 
 Purpose:
   Calculates the Longest Common Substring (LCS) between two transmission 
@@ -352,8 +388,8 @@ Function: main
 
 Purpose:
   Program entry point. Coordinates reading all 5 text files, triggers 
-  execution of analysis modules for Parts 1, 2, and 3, and formats 
-  standard output according to specifications.
+  execution of analysis modules for Stage 1 (Part 1), Stage 2 (Part 2), 
+  and Stage 3 (Part 3), formatting output according to specifications.
 
 Parameters:
   - None.
@@ -362,10 +398,10 @@ Return Value:
   - int: 0 upon successful execution.
 
 Preconditions:
-  - The 5 required files exist in the execution path.
+  - The 5 required text files exist in the execution path.
 
 Postconditions:
-  - Outputs results strictly in the required format for Parts 1, 2, and 3.
+  - Outputs analysis results strictly in the required format.
 */
 int main() {
     // Reading the 5 text files
@@ -375,7 +411,7 @@ int main() {
     string mcode2 = readFile("mcode2.txt");
     string mcode3 = readFile("mcode3.txt");
 
-    /* DESCOMENTAR
+    
     // Part 1: Search mcode1, mcode2, mcode3 in transmission1.txt
     displaySearchResult(findMaliciousCodePosition(transmission1, mcode1));
     displaySearchResult(findMaliciousCodePosition(transmission1, mcode2));
@@ -385,7 +421,7 @@ int main() {
     displaySearchResult(findMaliciousCodePosition(transmission2, mcode1));
     displaySearchResult(findMaliciousCodePosition(transmission2, mcode2));
     displaySearchResult(findMaliciousCodePosition(transmission2, mcode3));
-    */
+    
 
     // Part 2: Longest palindrome in transmission1 and transmission2 (placeholder)
     pair<int, int> palindromeTrans1 = findLongestPalindrome(transmission1);
@@ -394,8 +430,8 @@ int main() {
     cout << palindromeTrans2.first + 1 << " " << palindromeTrans2.second + 1 << "\n";
 
     // Part 3: Longest Common Substring in transmission1 relative to transmission2 (placeholder)
-    //pair<int, int> lcsResult = findLongestCommonSubstring(transmission1, transmission2);
-    //cout << lcsResult.first << " " << lcsResult.second << "\n";
+    pair<int, int> lcsResult = findLongestCommonSubstring(transmission1, transmission2);
+    cout << lcsResult.first << " " << lcsResult.second << "\n";
 
     return 0;
 }
